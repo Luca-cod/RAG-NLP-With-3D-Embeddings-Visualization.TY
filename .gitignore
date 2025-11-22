@@ -1,0 +1,34 @@
+# Ignora la cartella node_modules
+node_modules/
+
+# Ignora file compilati .js e map
+**/*.js
+**/*.js.map
+
+# Ignora i file di build e distribuzione
+dist/
+build/
+
+# Ignora file di configurazione locali o ambientali
+.env
+*.env
+.env.*
+
+# Ignora cache di TypeScript
+*.tsbuildinfo
+
+# Ignora file di log
+*.log
+
+# Ignora file temporanei dell'editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Ignora file di backup
+*~
+
+src/response/
+src/config/faiss_indeex/
+package-lock.json
