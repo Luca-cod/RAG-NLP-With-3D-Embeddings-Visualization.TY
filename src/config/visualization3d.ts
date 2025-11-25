@@ -11,6 +11,33 @@ export async function create3DVisualization(
 
     console.log("Creating 3D visualization...");
 
+    // CONVERTIRE PER PRIMA COSA, NON FUNZIONA SE I POINTS SONO FLOAT64!
+    reduceVectors = reduceVectors.map(v => Array.from(v));
+
+
+    if (reduceVectors.some(v => v.length !== 3 || v.some(n => !isFinite(n)))) {
+        throw new Error("Found invalid 3D vectors after t-SNE!");
+    }
+
+
+    for (let i = 0; i < reduceVectors.length; i++) {
+        const v = reduceVectors[i];
+        for (let j = 0; j < 3; j++) {
+
+            if (!Number.isFinite(v[j])) {
+                console.error("❌ INVALID NUMBER FOUND:", {
+                    index: i,
+                    vector: v,
+                    badValue: v[j]
+                });
+                throw new Error("Found invalid number in embeddings");
+            }
+
+        }
+    }
+
+
+
     //Crate the folder for the visualization if its not existed
     await fs.mkdir(config.visualizationPath, { recursive: true });
 
@@ -32,12 +59,12 @@ export async function create3DVisualization(
             color: 'grey',
             opacity: 0.5,
             line: {
-                color: 'ligthgray',
+                color: 'lightgray',
                 width: 1
             }
         },
         text: Array.from({ length: allX.length }, (_, i) => `Document ${i + 1}`),
-        hoverInfo: 'text'
+        hoverinfo: 'text'
     };
 
     //Trace per la query (rosso)
@@ -106,13 +133,36 @@ export async function create3DVisualization(
             y: 1,
         },
         width: 1200,
-        heigth: 800
+        height: 800
     };
     // Crea l'HTML
 
     const traces = [allPointsTrace, topKTrace, queryTrace];
 
+    console.log("TRACES RAW:", traces);
+
+    console.log("JSON TRACES:", JSON.stringify(traces, null, 2));
+
+    for (let i = 0; i < reduceVectors.length; i++) {
+        const v = reduceVectors[i];
+        if (!Array.isArray(v) || v.length !== 3 || v.some(n => !Number.isFinite(n))) {
+            console.error("Invalid vector at index", i, v);
+        }
+    }
+
+
+
+
     //    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    //integrity="sha384-VKw8eVLKKnZQd2yCLHrJ6g4E6KEg5QaQc7hqvUbcJbG8sD2hk0kF4fH5d5UQlQJ0" crossorigin="anonymous">
+
+    // Questariga sottostante crea questo problema:L'hash SHA384 dell'integrity check non corrisponde! Questo impedisce al browser di caricare Plotly per motivi di sicurezza
+    //<script src="https://cdn.plot.ly/plotly-2.27.1.min.js" integrity="sha384-VKw8eVLKKnZQd2yCLHrJ6g4E6KEg5QaQc7hqvUbcJbG8sD2hk0kF4fH5d5UQlQJ0" crossorigin="anonymous"></script>
+    /**Perché l'integrity check falliva?
+    
+    L'hash che hai usato non corrisponde al file effettivo su cdn.plot.ly
+    Questo è un meccanismo di sicurezza (Subresource Integrity) per prevenire manomissioni
+    È meglio non usarlo o usare l'hash corretto (che è: CfdUumYc8S2dvFy54M+E85yISHkahaJKY7Z8fFtHiyO/mLGSmDaGwiA4VfQufhNR) */
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -122,9 +172,8 @@ export async function create3DVisualization(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Embeddings Visualization - RAG System</title>
     <!-- Plotly.js from CDN -->
-    <script src="https://cdn.plot.ly/plotly-2.27.1.min.js" integrity="sha384-VKw8eVLKKnZQd2yCLHrJ6g4E6KEg5QaQc7hqvUbcJbG8sD2hk0kF4fH5d5UQlQJ0" crossorigin="anonymous"></script>
-
-     <style>
+        <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2.27.1/plotly.min.js"></script>
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -269,9 +318,19 @@ export async function create3DVisualization(
     </div>
     
     <script>
+
+    // Check if Plotly loaded
+    if (typeof Plotly === 'undefined') {
+        console.error('❌ Plotly not loaded from CDN!');
+        document.getElementById('plot').innerHTML = 
+            '<div style="color:red;padding:40px;text-align:center;font-size:18px;"><strong>ERROR:</strong> Plotly library failed to load.<br>Check your internet connection or firewall settings.</div>';
+    } else {
+        console.log('✅ Plotly loaded successfully, version:', Plotly.version);
+
+
         // Data
         const data = ${JSON.stringify(traces)};
-        
+
         // Layout
         const layout = ${JSON.stringify(layout)};
         
@@ -291,15 +350,34 @@ export async function create3DVisualization(
         };
         
         // Create plot
-        Plotly.newPlot('plot', data, layout, config);
-        
+        try {
+            Plotly.newPlot('plot', data, layout, config)
+                .then(() => {
+                    console.log('✅ 3D visualization rendered successfully!');
+                    console.log('   Total data points:', ${reduceVectors.length});
+                })
+                .catch(err => {
+                    console.error('❌ Plotly.newPlot failed:', err);
+                    document.getElementById('plot').innerHTML = 
+                        '<div style="color:red;padding:20px;">RENDER ERROR: ' + err.message + '</div>';
+                });
+        } catch (err) {
+            console.error('❌ Exception during Plotly.newPlot:', err);
+            document.getElementById('plot').innerHTML = 
+                '<div style="color:red;padding:20px;">EXCEPTION: ' + err.message + '</div>';
+        }
+}
         // Log success
         console.log('✅ 3D visualization loaded successfully!');
         console.log('Data points:', ${reduceVectors.length});
     </script>
+
 </body>
 </html>
   `;
+    //const layout = ${JSON.stringify(layout)};
+
+    //const data = ${JSON.stringify(traces)};
 
     // Salva il file HTML
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -361,11 +439,6 @@ Quindi un’espressione come:
 
     
  */
-
-function get_clusters(x: number, y: number) {
-    return
-
-}
 
 //Function for generate rundom numbers
 async function genereateRandomNumber(MaxValue: number): Promise<number> {
