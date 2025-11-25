@@ -31,4 +31,5 @@ build/
 
 src/response/
 src/config/faiss_indeex/
+src/visualizations/
 package-lock.json
