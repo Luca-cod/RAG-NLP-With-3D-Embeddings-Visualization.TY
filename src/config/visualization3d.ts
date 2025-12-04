@@ -432,11 +432,8 @@ export async function create3DVisualization(
 </body>
 </html>
   `;
-    //const layout = ${JSON.stringify(layout)};
 
-    //const data = ${JSON.stringify(traces)};
-
-    // Salva il file HTML
+    // Save the HTML file
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `embeddings_3d_${timestamp}.html`;
     const fullPath = path.join(config.visualizationPath, filename);
@@ -450,68 +447,9 @@ export async function create3DVisualization(
 
 
 
-/** In python posso utilizzare questa funzione per calcolare il cluster degli embedding:
- * def get_clusters(X, y):
-    return [X[np.where(y==i)] for i in range(np.amax(y)+1)]
-
-    Here, np.amax(y)+1 calculates the length of the list, assuming it to be from 0 to the maximum value in y (this can be changed if necessary).
-     Then, np.where(y==i) finds indices of each label, which are then selected from X.
-     The order of the for loop ensures that each index corresponds to the label of that value.
-
-     In italiano: for i in range(np.amax(y) + 1)
-
-np.amax(y) restituisce il valore massimo presente nell’array NumPy y.
-
-range(np.amax(y) + 1) crea un intervallo che va da 0 fino a np.amax(y) incluso (perché range esclude l’ultimo valore, quindi aggiungi 1).
-
-Il for scorre tutti i valori interi da 0 al massimo.
-
-y = np.array([2, 5, 3])
-np.amax(y)        # 5
-range(np.amax(y)+1)   # range(0, 6) → 0,1,2,3,4,5
-
-
-Quindi un’espressione come:
-[i for i in range(np.amax(y)+1)]  produce: [0, 1, 2, 3, 4, 5]
-
-
-     Ora devo migrare questa funzione da python a typescript.
-     
-     In TypeScript non esiste range nativamente, né c'è NumPy. Devi fare due cose:
-
-    Trovare il valore massimo dell’array.
-    Per trovare questo valore massimo devo scrivere cosi: 
-    se y è un array: const maxValue = Math.max(...y);
-
-    Generare un array di interi da 0 a quel massimo, riprodurre range(n):
-    const arr = Array.from({ length: maxValue +1}, (_, i) => i);  -> Equivalente esatto della list comprehension Python.
-
-    versione completa equivalente:
-    cont y: number[] = [2,5,3];
-
-    const maxValue = Math.max(...y);
-    const arr = Array.from({ length: maxValue +1}, (_, i) => i);
-    console.log(arr); E stampa [0,1,2,3,4,5]
-
-
-    
- */
-
 //Function for generate rundom numbers
 async function genereateRandomNumber(MaxValue: number): Promise<number> {
     return Math.floor(Math.random() * MaxValue)
 }
 
-/**
- * Oppure più semplice ancora
- * Ma ritorna un numero tra 0 incluso e 1 escluso
- * function getRandom(){
- * return Math.random();
- * }
- * 
- * Oppure per avere un numero random tra due numeri
- * function getRandomBetweenNumbers(min:number, max:number){
- *  return Math.random() * (max -min) + min
- * }
- */
 console.log("Numero Random:", genereateRandomNumber(100));

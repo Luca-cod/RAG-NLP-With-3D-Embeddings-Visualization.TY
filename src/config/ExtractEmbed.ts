@@ -36,7 +36,7 @@ function euclideanDistance(point1: number[], point2: number[]): number {
     )
 }
 
-//La mia ide è quella di ciclare per tutti i punti/embeddings che ottengo dalla riduzione da 768 dimensione a 3d avvenuta in t-SNE 
+//My idea is to loop through all the points/embeddings obtained from the reduction from 768 dimensions to 3D performed by t-SNE.
 export function cacolateEuclideanDistancesForAllEmbedings(
     reducedVectors: number[][]
 
@@ -46,19 +46,19 @@ export function cacolateEuclideanDistancesForAllEmbedings(
     console.log(" CALCOLO DISTANZE EUCLIDEE");
     console.log("=".repeat(70));
 
-    const queryPoint = reducedVectors[0]; //Nella posizione zero dell'indice troviamo il punto tridimensionale della query
-    const numPoints = reducedVectors.length; //Qua troviamo tutti gli altri punti
+    const queryPoint = reducedVectors[0]; //At index zero, we find the three-dimensional point of the query.
+    const numPoints = reducedVectors.length; //Here we find all the other points.
 
     console.log(`\nTotale embeddings: ${numPoints}`);
     console.log(`    -Query: 1 punto`);
     console.log(`    -Documenti: ${numPoints - 1} punti`);
 
-    //Array per salvare le distanze con i loro indici  ---> ?????
+    //Array to store the distances along with their indices ---> ?????
     const distances: Array<{ index: number; distance: number; point: number[] }> = [];
 
-    //Ciclo 1: Calcola la distanza tra la query e tutti gli altri punti:
-    for (let i = 1; i < numPoints; i++) { //Parte da 1 fino alla lunghezza totale dei punti trovati, perchè 0 è la query
-        const docPoint = reducedVectors[i];//Punti che andrò a confrontare con queryPoint tramite la funzione euclideanDistance
+    //Loop 1: Calculate the distance between the query and all the other points.
+    for (let i = 1; i < numPoints; i++) { //It starts from 1 up to the total number of points found, because 0 is the query.
+        const docPoint = reducedVectors[i];//Points that I will compare with `queryPoint` using the `euclideanDistance` function.
         const distance = euclideanDistance(docPoint, queryPoint);
 
         distances.push({ index: i, distance, point: docPoint });
@@ -66,18 +66,18 @@ export function cacolateEuclideanDistancesForAllEmbedings(
         console.log(`          posizione = [${docPoint.map(v => v.toFixed(5)).join(", ")}]`);
     }
 
-    //Ordina per distanza (più vicini)
+    //Sort by distance (closest first)
     distances.sort((a, b) => a.distance - b.distance);
 
-    console.log("\n TOP 5 Documenti più vicini alla query:");
+    console.log("\n TOP 5 Documents closest to the query:");
 
     for (let i = 0; i < Math.min(5, distances.length); i++) {
         const d = distances[i];
-        console.log(`   ${i + 1}. Doc ${d.index}: distanza = ${d.distance.toFixed(4)}`);
+        console.log(`   ${i + 1}. Doc ${d.index}: distance = ${d.distance.toFixed(4)}`);
     }
 
-    //Ciclo2: Calcola le distanze tra tutti i punti! (matrice di distanze)
-    console.log("\nMatrice delle distanze tra tutti i punti:\n");
+    //Loop 2: Calculate the distances between all points! (distance matrix)
+    console.log("\nDistance matrix between all points:\n");
 
     //Matrice distanze
     const distanceMatrix: number[][] = [];
@@ -88,7 +88,7 @@ export function cacolateEuclideanDistancesForAllEmbedings(
 
         for (let j = 0; j < numPoints; j++) {
             if (i === j) {
-                distanceMatrix[i][j] = 0;//Distanza da se stesso = 0
+                distanceMatrix[i][j] = 0;//Distance to itself = 0
             } else {
                 distanceMatrix[i][j] = euclideanDistance(reducedVectors[i], reducedVectors[j]);
             }
@@ -96,19 +96,19 @@ export function cacolateEuclideanDistancesForAllEmbedings(
     }
 
 
-    //Ciclo3: Identifichiamo il cluster (documenti vicini tra loro)
-    console.log("\nIDENTIFICAZIONE CLUSTER:");
-    console.log("(Documenti con distanza < 2.0 vengono considerati nello stesso cluster)\n");
+    //Loop 3: Identify the cluster (documents close to each other)
+    console.log("CLUSTER IDENTIFICATION:\n");
+    console.log("(Documents with distance < 2.0 are considered part of the same cluster.)\n");
 
     const trheshold = 2.0;
     const clusters: Map<number, number[]> = new Map();
     const visited = new Set<number>();
 
-    for (let i = 1; i < numPoints; i++) {//Ignoro lo 0 perr il cluster essendo la query, a me interessano gli altri punti
+    for (let i = 1; i < numPoints; i++) {//I ignore the 0 for the cluster since it’s the query; I’m only interested in the other points.
         if (visited.has(i)) continue;
 
-        //Definisco il punto di partenza a cui andrò a confrontare cno tutti gli altri per cercare quelli vicini ad esso!
-        const cluster: number[] = [i]; //Array di number di posizione i-esima, ovvero il punto che stiamo valutando durante il ciclo
+        //I define the starting point, which I will compare with all the others to find those close to it.
+        const cluster: number[] = [i]; //Array of numbers at the i-th position, representing the point we are evaluating during the loop.
         visited.add(i);
 
         //Tovo tutti i punti vicini a questo
