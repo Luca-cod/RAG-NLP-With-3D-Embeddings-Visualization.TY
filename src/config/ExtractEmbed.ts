@@ -31,29 +31,12 @@ export async function extractEmbeddings(docs: any[], queryEmbedding: number[]): 
 
 
 function euclideanDistance(point1: number[], point2: number[]): number {
-
-    /*Formula per distanza euclidea per tre dimensioni
-    d(A,B) = sqrt( (xb - xa)^2 + (yb -ya)^2 + (zb - za )^2 )
-    Quindi devo trovare i punti delle tre dimensioni di A e B ovvero devo calcolare la distanza tra gli embeddings ottenuti, ma cmoe
-    associo degli embeddings alle due variabili A e B?
-    Beh ogni punto ha le sue coordinate, per cui essendo che viene calcolata la distanza tra tutti i punti devo fare un ciclo che appunto
-    calcoli questa distanza tra tutti i punti nel piano e dia una rilevanza a quelli più vicini tra loro, il punto che ha più embedding vicini è
-    un cluster, il cluster più vicino all'embedding della query è il documento più rilevante o il cluster più vicino è quello più rilevante
-
-    Usando questa distanza, lo spazio euclideo diventa uno spazio metrico (più in particolare risulta uno spazio di Hilbert, spazio vettoriale su cui 
-    è definito un prodotto scalare8quindi è possibile calcolare/parlare di norma, distanze, angoli e ortogonalità)
-
-    */
-
     return Math.sqrt(
         point1.reduce((sum, val, i) => sum + Math.pow(val - point2[i], 2), 0)
     )
-
-
-
 }
 
-//La mia ide aè quella di ciclare per tutti i punti/embeddings che ottengo dalla riduzione da 768 dimensione a 3d avvenuta in t-SNE 
+//La mia ide è quella di ciclare per tutti i punti/embeddings che ottengo dalla riduzione da 768 dimensione a 3d avvenuta in t-SNE 
 export function cacolateEuclideanDistancesForAllEmbedings(
     reducedVectors: number[][]
 
@@ -112,15 +95,6 @@ export function cacolateEuclideanDistancesForAllEmbedings(
         }
     }
 
-    //Mostriamo un campione della matrice, un 5x5 per esempio
-    /*const sampleSize = Math.min(5, numPoints);
-
-    for (let i = 0; i < 5; i++) {
-        distanceMatrix[i] = [];
-        for (let j = 0; j < 5; j++) {
-            distanceMatrix[j] = [];
-        }
-    }*/
 
     //Ciclo3: Identifichiamo il cluster (documenti vicini tra loro)
     console.log("\nIDENTIFICAZIONE CLUSTER:");
@@ -150,16 +124,17 @@ export function cacolateEuclideanDistancesForAllEmbedings(
         clusters.set(i, cluster);// --> ???
     }
 
-    //Mostra i cluster trovati:
+    //Show the cluster found:
     let clusterNum = 1;
-    for (const [lead, members] of clusters.entries()) {//Ciclo per tutti i memebers dell'oggetto clusters, clusters è un 'oggetto perquesto uso entries
+    for (const [lead, members] of clusters.entries()) {//Loop through all members of the `clusters` object; since `clusters` is an object, I use `entries`.
+
         if (members.length > 1) {
             console.log(`   Cluster ${clusterNum}`);
             console.log(`       Documenti: [${members.join(", ")}]`);
             console.log(`       Dimensione ${members.length} documenti`);
         }
 
-        //Calcolo distanza media del cluster dalla query
+        //Average distance of the cluster from the query
         const avgDistanceFromQuery = members.reduce((sum, index) =>
             sum + euclideanDistance(queryPoint, reducedVectors[index]), 0
         ) / members.length;
@@ -175,7 +150,7 @@ export function cacolateEuclideanDistancesForAllEmbedings(
 
     console.log("=".repeat(70) + "\n");
 
-    //Ritorno informazioni utili
+
     return {
         totalPoints: numPoints,
         distanceMatrix,

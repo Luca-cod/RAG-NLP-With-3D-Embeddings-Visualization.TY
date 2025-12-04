@@ -11,7 +11,7 @@ export async function create3DVisualization(
 
     console.log("Creating 3D visualization...");
 
-    // CONVERTIRE PER PRIMA COSA, NON FUNZIONA SE I POINTS SONO FLOAT64!
+    // Convert first, it **won’t work** if the points are `float64`!!!
     reduceVectors = reduceVectors.map(v => Array.from(v));
 
 
@@ -38,7 +38,7 @@ export async function create3DVisualization(
 
 
 
-    //Crate the folder for the visualization if its not existed
+    //Create the folder for the visualization if its not existed
     await fs.mkdir(config.visualizationPath, { recursive: true });
 
     //Prepare the dates for all the points (grey)
@@ -89,7 +89,7 @@ export async function create3DVisualization(
         hoverinfo: 'text'
     };
 
-    //Trace per i top K documenti(blu)
+    //Trace for top K documents(blue)
     const topKX = reduceVectors.slice(1, topK + 1).map(v => v[0]);
     const topKY = reduceVectors.slice(1, topK + 1).map(v => v[1]);
     const topKZ = reduceVectors.slice(1, topK + 1).map(v => v[2]);
@@ -119,14 +119,66 @@ export async function create3DVisualization(
     const layout = {
         title: {
             text: `3D Embeddings Visualization (t-SNE, Perplexity=${config.visualization.perplexity})`,
-            font: { size: 18 },
+            font: { size: 20 },
 
         },
         scene: {
-            xaxis: { title: 'Dimension 1' },
-            yaxis: { title: 'Dimension 2' },
-            zaxis: { title: 'Dimension3' }
+            xaxis:
+            {
+                title: 'Dimension 1',
+                backgroundcolor: "rgba(30,30,30,0.9)",
+                gridcolor: "rgba(100,100,100,0.2)",
+                zerolinecolor: "rgba(200,200,200,0.6)",
+                color: "white",
+                showbackground: true
+                /*backgroundcolor: "rgba(240, 240, 255, 0.4)",
+                gridcolor: "rgba(180,180,200,0.3)",
+                zerolinecolor: "rgba(100,100,120,0.6)",
+                showbackground: true, */
+
+            },
+
+            yaxis:
+            {
+                title: 'Dimension 2',
+                backgroundcolor: 'rgba(30,30,30,0.9)',
+                gridcolor: 'rgba(100,100,100,0.2)',
+                zerolinecolor: 'rgba(200,200,200,0.6)',
+                color: 'white',
+                showbackground: true
+                /*backgroundcolor: "rgba(240, 255, 240, 0.4)",
+                gridcolor: "rgba(180,200,180,0.3)",
+                zerolinecolor: "rgba(100,120,100,0.6)",
+                showbackground: true,*/
+            },
+
+            zaxis:
+            {
+                title: 'Dimension 3',
+                backgroundcolor: 'rgba(30,30,30,0.9)',
+                gridcolor: 'rgba(100,100,100,0.2)',
+                zerolinecolor: 'rgba(200,200,200,0.6)',
+                color: 'white',
+                showbackground: true
+                /*backgroundcolor: "rgba(255, 240, 240, 0.4)",
+                gridcolor: "rgba(200,180,180,0.3)",
+                zerolinecolor: "rgba(120,100,100,0.6)",
+                showbackground: true,*/
+            },
         },
+
+        //Change the grey(grigio)
+        paper_bgcolor: "#121212",
+        plot_bgcolor: "#121212",
+
+        // Rimuovere la “cornice dura” e avere un cubo più moderno
+        aspectmode: "cube",
+        dragmode: "orbit",
+        camera: {
+            eye: { x: 2.2, y: 2.2, z: 1.5 }
+            //eye: { x: 1.5, y: 1.5, z: 1.1 }
+        },
+
         showlegend: true,
         legend: {
             x: 0,
@@ -210,7 +262,9 @@ export async function create3DVisualization(
             color: #555;
             margin-bottom: 25px;
             padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+           <!-- background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); -->
+
+           background: linear-gradient(135deg, #121212 0%, #121212 100%); 
             border-left: 5px solid #667eea;
             border-radius: 8px;
             line-height: 1.8;
@@ -339,6 +393,9 @@ export async function create3DVisualization(
             responsive: true,
             displayModeBar: true,
             displaylogo: false,
+            scrollZoom: true,
+            usegl:true,
+            doubleClick: 'reset',
             modeBarButtonsToRemove: ['toImage', 'sendDataToCloud'],
             toImageButtonOptions: {
                 format: 'png',
